@@ -627,10 +627,6 @@ The code implementation is like any other database.
 
 In other cases, we would need a re-training of the model to fit new data, but with this approach our model is our infraestructure and we have _AI as Infraestructure_ with native operations of search and data persistence. 
 
-Thanks
+Thanks!
+
 Amable Valdés
-
-
-```python
-
-```
