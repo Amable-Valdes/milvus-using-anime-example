@@ -1,6 +1,6 @@
 # Recomendation system with Milvus
 
-In this previous work (https://www.kaggle.com/code/amablevaldes/anime-recommendation-system-based-on-embeddings) we have implemented a feature extractor that allow us to generate embeddings for our anime dataset. With these embeddings we can now generate a recommendation system using cosine similarity.
+In this previus work (https://www.kaggle.com/code/amablevaldes/anime-recommendation-system-based-on-embeddings) we have implemented a feature extractor that allow us to generate embeddings for our anime dataset. With these embeddings we can now generate a recomendation system using cosine similarity.
 
 But, why stop there? Why not improve it further?
 
@@ -8,9 +8,9 @@ Using Milvus, a vectorDB, we can create a database, insert our embeddings into c
 
 # Setup Milvus
 
-I have left you a `docker-compose.yml`on this repository. It has all the information necessary for the deployment of Milvus through docker.
+I have left you a `docker-compose.yml`on this repository. It has all the information necesary for the deployment of Milvus throug docker.
 
-If you don't have Docker installed you can install it (2025/08: https://docs.docker.com/get-started/get-docker/)
+If you dont have Docker installed you can install it (2025/08: https://docs.docker.com/get-started/get-docker/)
 
 To create your Milvus DB you only need to execute `docker compose up` and the system will start. I like to use `docker compose up -d` to detach the execution and put it on background.
 
@@ -105,7 +105,7 @@ print("Database created")
     Database created
 
 
-Now that we have a Database we must define the Schema out Collection is going to have:
+Now that we have a Database we must define the Schema out CVollection is going to have:
 
 
 ```python
@@ -148,7 +148,7 @@ print("Schema defined")
     Schema defined
 
 
-As you can see our collection is going to have 3 fields: anime_index, anime_name and embedding. The index and the name will be to identify the anime and give it a name, they are attributes. Meanwhile, the embedding is the information which we are going to work on our searchs on the vector space.
+As you can see our collection is going to have 3 fields: anime_index, anime_name and embedding. The index and the name will be to identify the anime and give it a name, they are atributes. Meanwhile, the embedding is the information which we are goign to work on our searchs on the vector space.
 
 The last step is generate the Collection that will follow the precious Schema on our new created Database:
 
@@ -188,7 +188,7 @@ First of all, we must prepare the data as a JSON with the schema that we have de
 
 ```python
 # Prepare the data
-print("Inserting data...")
+print("Preparing data to insert...")
 data = [
     {
         "anime_index": ids[i], 
@@ -198,10 +198,14 @@ data = [
 ]
 
 # Before insert the elements, i take out the example samples that i will show later
-data.pop(9)
+print(f"Deleting '{data[2790]["anime_name"]}' from animes to insert on the DB")
 data.pop(2790)
+print(f"Deleting '{data[1896]["anime_name"]}' from animes to insert on the DB")
 data.pop(1896)
+print(f"Deleting '{data[1344]["anime_name"]}' from animes to insert on the DB")
 data.pop(1344)
+print(f"Deleting '{data[9]["anime_name"]}' from animes to insert on the DB")
+data.pop(9)
 
 # Show results
 print(f"Example data that is going to be inserted:")
@@ -211,7 +215,11 @@ print(f"\tembedding: {np.asarray(data[0]["embedding"], dtype=np.float32)}")
 
 ```
 
-    Inserting data...
+    Preparing data to insert...
+    Deleting 'Warau Salesman' from animes to insert on the DB
+    Deleting 'Kindaichi Shounen no Jikenbo' from animes to insert on the DB
+    Deleting 'D.Gray-man' from animes to insert on the DB
+    Deleting 'Monster' from animes to insert on the DB
     Example data that is going to be inserted:
     	anime_index: 0
     	anime_name: Cowboy Bebop
@@ -362,9 +370,9 @@ client.flush(collection_name=collection_name)
 
 # Search on our spatial vector space
 
-Now that we have data on our collection, we can ask for similar vectors to other vectors. This is how recommendation systems works.
+Now that we have data on our collection, we can ask for similar vectors to other vectors. This is how recomendation systems works.
 
-We are going o take _Cowboy Bebop_ as an example. This is the element with index 0 on our dataset, so, we ask for similar vectors and...
+We are going o take _Monster_ as an example. This is the element with index 9 on our dataset, so, we ask for similar vectors and...
 
 
 ```python
@@ -388,26 +396,26 @@ for hits in res:
 
     Query Anime: Monster (index=9)
     
-    - Warau Salesman (similarity=0.9991)
     - Lupin III: Part II (similarity=0.9991)
     - Maison Ikkoku (similarity=0.9990)
-    - Kindaichi Shounen no Jikenbo (similarity=0.9990)
     - Eyeshield 21 (similarity=0.9990)
     - Kirarin☆Revolution (similarity=0.9990)
     - Tetsuwan Atom (similarity=0.9989)
     - Tennis no Oujisama (similarity=0.9989)
-    - D.Gray-man (similarity=0.9989)
     - Ranma ½ (similarity=0.9989)
     - Gekitou! Crush Gear Turbo (similarity=0.9989)
+    - Ginga Eiyuu Densetsu (similarity=0.9989)
+    - Di Gi Charat Nyo (similarity=0.9989)
+    - Wagamama☆Fairy Mirumo de Pon! (similarity=0.9989)
 
 
-... and we have a selection of animes that have a similar vector on our spatial vector space similar to the vector of _Cowboy Bebop_
+... and we have a selection of animes that have a similar vector on our spatial vector space similar to the vector of _Monster_
 
 ## Continuous data integration
 
 But, think that we have an Anime Web Page where we show animes to users. We have new animes every season, so, there will be a continuous integrations of new data.
 
-In a real scenario, you would need to train you model again with the new data to recommend your new products. But not with an cluster oriented solution.
+In a real scenario, you would need to train you model again with the new data to recomend your new products. But not with an cluster oriented solution.
 
 Let's insert new data to the collection:
 
@@ -580,7 +588,7 @@ client.flush(collection_name=collection_name)
     
 
 
-And now let's ask again the database for similar vectors to Cowboy Bebop vector:
+And now let's ask again the database for similar vectors to _Monster_ vector:
 
 
 ```python
@@ -610,14 +618,14 @@ for hits in res:
     - Kindaichi Shounen no Jikenbo (similarity=0.9990)
     - Eyeshield 21 (similarity=0.9990)
     - Kirarin☆Revolution (similarity=0.9990)
-    - Tetsuwan Atom (similarity=0.9989)
     - Tennis no Oujisama (similarity=0.9989)
     - D.Gray-man (similarity=0.9989)
     - Ranma ½ (similarity=0.9989)
     - Gekitou! Crush Gear Turbo (similarity=0.9989)
+    - Ginga Eiyuu Densetsu (similarity=0.9989)
 
 
-The vectorial space has changed, and with a simple search we have an update of the data. This allows a continuous integration of the solution with other tools like kafka or a custom pipeline that feed the model with new data.
+The elements on the vectorial space have changed, and with a simple search we have an update of the data. This allows a continuous integration of the solution with other tools like kafka or a custom pipeline that feed the model with new data.
 
 # Conclusions
 
@@ -627,6 +635,11 @@ The code implementation is like any other database.
 
 In other cases, we would need a re-training of the model to fit new data, but with this approach our model is our infraestructure and we have _AI as Infraestructure_ with native operations of search and data persistence. 
 
-Thanks!
+Thank you very much for reading!
 
 Amable Valdés
+
+
+```python
+
+```
