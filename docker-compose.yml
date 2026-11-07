@@ -18,7 +18,13 @@ services:
 
   minio:
     container_name: milvus-minio
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    # The official minio/minio image (pinned to RELEASE.2024-12-18T13-15-44Z) is no
+    # longer published on Docker Hub, so this uses the Chainguard build of MinIO.
+    # Its entrypoint is already `minio`, hence the command below starts at `server`.
+    image: chainguard/minio:latest
+    # Runs as root so the bind-mounted data directory (created by Docker as root)
+    # is writable by MinIO.
+    user: root
     environment:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
@@ -27,7 +33,7 @@ services:
       - "9000:9000"
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
-    command: minio server /minio_data --console-address ":9001"
+    command: server /minio_data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s

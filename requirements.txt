@@ -1,14 +1,7 @@
-grpcio==1.74.0
-milvus-lite==2.5.1
-numpy==2.3.2
+# Tested with Python 3.14 (the scripts need Python 3.12+ for their f-string syntax).
+# Install with:
+#   python -m venv .venv && .venv/bin/pip install -r requirements.txt
+#
 pandas==2.3.1
-protobuf==6.32.0
+numpy==2.3.2
 pymilvus==2.6.0
-python-dateutil==2.9.0.post0
-python-dotenv==1.1.1
-pytz==2025.2
-setuptools==80.9.0
-six==1.17.0
-tqdm==4.67.1
-tzdata==2025.2
-ujson==5.10.0
