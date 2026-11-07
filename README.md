@@ -26,7 +26,7 @@ This time I wanted to answer a follow-up question: what changes when the vectors
 - run nearest-neighbour searches with cosine similarity,
 - add new vectors to a collection that already exists.
 
-I walked through the whole process in [`execution_in_markdown.md`](execution_in_markdown.md), with all the outputs. The same steps are also in [`main_notebook.ipynb`](main_notebook.ipynb).
+I walked through the whole process in [`execution_in_markdown.md`](execution_in_markdown.md), with all the outputs. The same steps are also in [`main_notebook.ipynb`](main_notebook.ipynb). Note that the outputs in `execution_in_markdown.md` were produced before the two bug fixes described in [Known issues](#known-issues), so the IDs and row counts there differ slightly from what the scripts print now.
 
 ## How it works
 
@@ -120,12 +120,12 @@ python as_python_scripts/4_search_the_same_again.py
 
 | Script | What it does | Safe to re-run? |
 | --- | --- | --- |
-| `1_populate_bbdd.py` | Drops `anime_database` if it exists, then creates the database, the collection and the index, and inserts the dataset. | Yes. It starts from scratch each time. |
+| `1_populate_bbdd.py` | Drops `anime_database` if it exists, then creates the database, the collection and the index, and inserts the dataset, holding out four rows (9, 2790, 1896 and 1344). | Yes. It starts from scratch each time. |
 | `2_search_one.py` | Searches the 11 nearest neighbours of the vector at row 9 (*Monster*). | Yes, read-only. |
-| `3_pipeline_bring_new_data.py` | Inserts three more anime into the existing collection. | **No.** Each run adds the same rows again. See [Known issues](#known-issues). |
+| `3_pipeline_bring_new_data.py` | Upserts the three held-out anime (2790, 1896 and 1344) into the existing collection. | Yes. An upsert replaces rows with the same ID, so nothing is duplicated. |
 | `4_search_the_same_again.py` | Repeats the search from step 2 on the updated collection. | Yes, read-only. |
 
-Here is an example of the output from step 2 (cosine similarity, higher means more similar):
+Here is an example of the output from step 4, after step 3 has added the held-out anime back (cosine similarity, higher means more similar):
 
 ```text
 {'anime_index': 2790, 'distance': 0.9991167783737183, 'entity': {'anime_name': 'Warau Salesman'}}
@@ -149,11 +149,14 @@ These are the defaults I use for a local test deployment. Do not expose these po
 
 ## Known issues
 
-The original scripts had several problems. I have documented them here rather than fixing them yet.
+I fixed two bugs from my original scripts:
 
-- **Step 1 removes the wrong anime.** `1_populate_bbdd.py` calls `pop()` on the list four times, in ascending order. Each removal shifts the rows after it, so the removed IDs are actually **9, 2791, 1897 and 1345**, not 9, 2790, 1896 and 1344. Step 3 then re-inserts 2790, 1896 and 1344, which were never removed. After the full pipeline, IDs 2791, 1897 and 1345 are missing from the collection. The fix is to remove the rows in descending order, or to select them by `anime_index` instead of by position.
-- **Step 3 is not idempotent.** `insert` does not check for existing primary keys here, so every run adds three duplicate rows. Re-running step 1 first restores a clean collection. Switching step 3 from `insert` to `upsert` would make it safe to repeat.
-- **`2_search_one.py` and `4_search_the_same_again.py` are identical.** I kept them as two separate steps to show the same query before and after step 3.
+- **Step 1 held out the wrong anime.** It used to call `pop()` four times in a row, and each removal shifted the rows after it, so it held out IDs 9, 2791, 1897 and 1345 instead of 9, 2790, 1896 and 1344. Step 1 now filters out the four intended rows in one pass.
+- **Step 3 duplicated rows on every run.** It used `insert`, which does not replace existing primary keys. It now uses `upsert`, so I can re-run it safely. I checked this: after two extra runs the collection still holds 29,152 rows, one per anime.
+
+The known issues that remain:
+
+- **`2_search_one.py` and `4_search_the_same_again.py` are identical.** I kept them as two separate steps to show you the same query before and after step 3 :)
 - **MinIO image.** My original compose file pinned `minio/minio:RELEASE.2024-12-18T13-15-44Z`, which is no longer available on Docker Hub. The compose file now uses `chainguard/minio:latest`, which is not pinned to a version. I should pin it to a specific tag for reproducible setups.
 - **Dependency pins.** I only pin the direct dependencies. Transitive versions, such as `protobuf` and `milvus-lite`, come from `pymilvus` and may change between installs.
 

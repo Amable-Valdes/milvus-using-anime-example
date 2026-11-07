@@ -26,8 +26,9 @@ print("Conection stablished\n")
 database_name = "anime_database"
 client.use_database(db_name=database_name)
 
-# Insert new series that didnt exist before (new vectors for the DB)
-print("Inserting data...")
+# Add the anime that step 1 held out. Upsert (not insert) so that running this script
+# again updates these rows instead of creating duplicates.
+print("Upserting data...")
 collection_name = "anime_embeddings_collection"
 data = [
     {
@@ -51,10 +52,10 @@ print(f"Example data that is going to be inserted:")
 print(f"\tanime_index: {data[0]["anime_index"]}")
 print(f"\tanime_name: {data[0]["anime_name"]}")
 print(f"\tembedding: {np.asarray(data[0]["embedding"], dtype=np.float32)}")
-res = client.insert(
+res = client.upsert(
     collection_name=collection_name,
     data=data
 )
-print(f"Inserted {res["insert_count"]} rows into Milvus collection '{collection_name}'\n")
+print(f"Upserted {res["upsert_count"]} rows into Milvus collection '{collection_name}'\n")
 
 client.flush(collection_name=collection_name)

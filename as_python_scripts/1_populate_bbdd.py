@@ -100,11 +100,11 @@ data = [
         "embedding": vectors[i]
     } for i in range(len(ids))
 ]
-# Before insert the elements, i take out the example samples that i will show later
-data.pop(9)
-data.pop(2790)
-data.pop(1896)
-data.pop(1344)
+# Before inserting, take out the example samples that are shown later: the query row (9)
+# and the three rows that step 3 inserts. Filtering by position in a single pass avoids
+# the index shifts that repeated pop() calls cause.
+HELD_OUT_POSITIONS = {9, 2790, 1896, 1344}
+data = [row for i, row in enumerate(data) if i not in HELD_OUT_POSITIONS]
 print(f"Example data that is going to be inserted:")
 print(f"\tanime_index: {data[0]["anime_index"]}")
 print(f"\tanime_name: {data[0]["anime_name"]}")
